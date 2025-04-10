@@ -1,4 +1,17 @@
-<?php session_start(); ?>
+<?php session_start(); 
+
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$client = new Google_Client();
+$client->setClientId('1041692668860-ltlh4m15m6nsdtaqmbodli294r6o7bme.apps.googleusercontent.com');
+$client->setClientSecret('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');
+$client->setRedirectUri('http://localhost/oreintation/admin/callback.php');
+$client->addScope("email");
+$client->addScope("profile");
+
+$auth_url = $client->createAuthUrl();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,14 +67,38 @@
                 <input type="text" id="username" name="username" class="form-control" placeholder="Username" required>
             </div>
             <div class="mb-3">
-                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                    <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility()">
+                        Show
+                    </button>
+                </div>
             </div>
+            <script>
+                function togglePasswordVisibility() {
+                    const passwordField = document.getElementById('password');
+                    const button = event.target;
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        button.textContent = 'Hide';
+                    } else {
+                        passwordField.type = 'password';
+                        button.textContent = 'Show';
+                    }
+                }
+            </script>
+            <a href="forgot_password.php" style="color:rgb(141, 125, 82);">Forgot Password?</a>
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
         <div class="text-center mt-3">
             <a href="register.php" class="register-link">Not registered? Sign up here</a>
+        <div class="text-center mt-3">
         </div>
-    </div>
+        <a href="<?= htmlspecialchars($auth_url) ?>">
+  <img src="https://developers.google.com/identity/images/btn_google_signin_dark_normal_web.png" alt="Sign in with Google" />
+</a>
+        </div>
+        </div>
     <script>
         function validateForm() {
             const username = document.getElementById('username').value.trim();

@@ -9,7 +9,6 @@ $client->addScope("email");
 $client->addScope("profile");
 
 $auth_url = $client->createAuthUrl();
-header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
 
 
 
@@ -76,12 +75,43 @@ $result = $conn->query("SELECT * FROM users");
     <title>Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            background-color: #3e2723;;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
         .btn-dark-brown {
             background-color: #5C4033;
             color: white;
         }
         .btn-dark-brown:hover {
             background-color: #4A3228;
+        }
+        .split-screen {
+            display: flex;
+            min-height: 100vh;
+        }
+        .left-side {
+            flex: 1;
+            background-image: url('../assets/img/login.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        .right-side {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            .left-side {
+                display: none;
+            }
+            .right-side {
+                flex: 1;
+            }
         }
     </style>
 </head>
