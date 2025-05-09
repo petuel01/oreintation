@@ -1,0 +1,288 @@
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+
+$client = new Google_Client();
+$client->setClientId('1041692668860-ltlh4m15m6nsdtaqmbodli294r6o7bme.apps.googleusercontent.com');
+$client->setClientSecret('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');
+$client->setRedirectUri('http://localhost/oreintation/callback.php');
+$client->addScope("email");
+$client->addScope("profile");
+
+$auth_url = $client->createAuthUrl();
+
+
+
+
+
+// Include database connection
+include("config/db.php");
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $re_password = trim($_POST['re_password']);
+    $role = trim($_POST['role']);
+    $errors = [];
+
+    // Form validation
+    if (empty($name)) {
+        $errors[] = 'Name is required.';
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Invalid email format.';
+    }
+    if (empty($password)) {
+        $errors[] = 'Password is required.';
+    } elseif (strlen($password) < 8) {
+        $errors[] = 'Password must be at least 8 characters long.';
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'Password must contain at least one uppercase letter.';
+    } elseif (!preg_match('/[a-z]/', $password)) {
+        $errors[] = 'Password must contain at least one lowercase letter.';
+    } elseif (!preg_match('/[0-9]/', $password)) {
+        $errors[] = 'Password must contain at least one number.';
+    } elseif (!preg_match('/[\W_]/', $password)) {
+        $errors[] = 'Password must contain at least one special character.';
+    }
+    if ($password !== $re_password) {
+        $errors[] = 'Passwords do not match.';
+    }
+    if (empty($role)) {
+        $errors[] = 'Role is required.';
+    }
+
+    if (empty($errors)) {
+        // Hash the password
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+        // Insert into the database
+        $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $name, $email, $hashedPassword, $role);
+
+        if ($stmt->execute()) {
+            // Start session and set session variables
+            session_start();
+            $_SESSION['user_id'] = $conn->insert_id;
+            $_SESSION['user_name'] = $name;
+            $_SESSION['user_role'] = $role;
+
+            // Redirect based on role
+            if ($role === 'admin' || $role === 'school_representative') {
+                header("Location: admin/dashboard.php");
+            } elseif ($role === 'student') {
+                header("Location: index.php");
+            }
+            exit();
+        } else {
+            $errors[] = "Error: " . $stmt->error;
+        }
+
+        $stmt->close();
+    }
+}
+
+// Fetch users for display
+
+$result = $conn->query("SELECT * FROM users");
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+        }
+        .left-side {
+            width: 50%;
+            height: 100%;
+        }
+        .left-side img {
+            width: 100%;
+            height: 120vh;
+            object-fit: cover;
+        }
+        .right-side {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #3e2723;
+            padding: 20px;
+        }
+        .form-container {
+            background-color: #5d4037;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+        }
+        .btn-dark-brown {
+            background-color: #5C4033;
+            color: white;
+        }
+        .btn-dark-brown:hover {
+            background-color: #4A3228;
+        }
+        @media (max-width: 768px) {
+            .left-side {
+                display: none;
+            }
+            .right-side {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="left-side">
+        <img src="assets/Flux_Dev_Generate_an_elegant_image_of_a_confident_black_studen_0.jpeg" alt="">
+    </div>
+    <div class="right-side">
+        <div class="form-container">
+            <h2 class="text-center">Register User</h2>
+
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-danger">
+                    <ul>
+                        <?php foreach ($errors as $error): ?>
+                            <li><?= htmlspecialchars($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <?php if (!empty($success)): ?>
+                <div class="alert alert-success">
+                    <?= htmlspecialchars($success) ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="">
+                <div class="mb-2">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control form-control-sm" id="name" name="name" required>
+                </div>
+                <div class="mb-2">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control form-control-sm" id="email" name="email" required>
+                </div>
+                <div class="mb-2">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control form-control-sm" id="password" name="password" required oninput="checkPasswordStrength()">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="togglePasswordVisibility('password')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="mt-2 d-flex justify-content-between">
+                        <div id="weak-bar" class="strength-bar bg-secondary"></div>
+                        <div id="average-bar" class="strength-bar bg-secondary"></div>
+                        <div id="strong-bar" class="strength-bar bg-secondary"></div>
+                    </div>
+                    <small id="password-strength-text" class="text-muted"></small>
+                </div>
+                <div class="mb-2">
+                    <label for="re_password" class="form-label">Re-enter Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control form-control-sm" id="re_password" name="re_password" required>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="togglePasswordVisibility('re_password')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <script>
+                    function togglePasswordVisibility(fieldId) {
+                        const field = document.getElementById(fieldId);
+                        const icon = field.nextElementSibling.querySelector('i');
+                        if (field.type === 'password') {
+                            field.type = 'text';
+                            icon.classList.remove('bi-eye');
+                            icon.classList.add('bi-eye-slash');
+                        } else {
+                            field.type = 'password';
+                            icon.classList.remove('bi-eye-slash');
+                            icon.classList.add('bi-eye');
+                        }
+                    }
+
+                    function checkPasswordStrength() {
+                        const password = document.getElementById('password').value;
+                        const weakBar = document.getElementById('weak-bar');
+                        const averageBar = document.getElementById('average-bar');
+                        const strongBar = document.getElementById('strong-bar');
+                        const strengthText = document.getElementById('password-strength-text');
+                        let strength = 0;
+
+                        if (password.length >= 8) strength++;
+                        if (/[A-Z]/.test(password)) strength++;
+                        if (/[a-z]/.test(password)) strength++;
+                        if (/[0-9]/.test(password)) strength++;
+                        if (/[\W_]/.test(password)) strength++;
+
+                        weakBar.className = 'strength-bar bg-secondary';
+                        averageBar.className = 'strength-bar bg-secondary';
+                        strongBar.className = 'strength-bar bg-secondary';
+
+                        if (strength >= 1) weakBar.className = 'strength-bar bg-danger';
+                        if (strength >= 3) averageBar.className = 'strength-bar bg-warning';
+                        if (strength >= 5) strongBar.className = 'strength-bar bg-success';
+
+                        switch (strength) {
+                            case 0:
+                            case 1:
+                                strengthText.textContent = 'Weak';
+                                break;
+                            case 2:
+                            case 3:
+                                strengthText.textContent = 'Average';
+                                break;
+                            case 4:
+                            case 5:
+                                strengthText.textContent = 'Strong';
+                                break;
+                        }
+                    }
+                </script>
+                <style>
+                    .strength-bar {
+                        width: 30%;
+                        height: 5px;
+                        margin: 0 2px;
+                        border-radius: 3px;
+                    }
+                </style>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+                <div class="mb-2">
+                    <label for="role" class="form-label">Role</label>
+                    <select class="form-select form-select-sm" id="rolse" name="role" required>
+                        <option value="" disabled selected>Select role</option>
+                        <option value="student">student</option>
+                        <option value="school_representative">school_rep
+                        </option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-dark-brown w-100">Register</button>
+                <div class="text-center mt-2">
+                    <a href="login.php" style="color:rgb(141, 125, 82);">Already have an account? Login</a>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="<?= htmlspecialchars($auth_url) ?>">
+                        <img src="https://developers.google.com/identity/images/btn_google_signin_dark_normal_web.png" alt="Sign in with Google" />
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -103,8 +103,6 @@
       }
     }
   </style>
-</head>
-<body>
 
   <!-- Sidebar -->
   <nav class="sidebar" id="sidebar">
@@ -128,12 +126,22 @@
         </a>
       </li>
       <li class="nav-item">
+        <a href="approve_school_reps.php" class="nav-link" id="approve-admins">
+          <i class="fas fa-user-check"></i> <span>Approve Admins</span>
+        </a>
+      </li>
+      <li class="nav-item">
         <a href="users.php" class="nav-link" id="users">
           <i class="fas fa-users"></i> <span>Users</span>
         </a>
       </li>
+      <li class="nav-item">
+        <a href="../settings.php" class="nav-link" id="settings">
+          <i class="fas fa-cog"></i> <span>Settings</span>
+        </a>
+      </li>
       <li class="nav-item logout">
-        <a href="logout.php" class="nav-link">
+        <a href="../logout.php" class="nav-link">
           <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
         </a>
       </li>

@@ -1,0 +1,156 @@
+<?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once __DIR__ . '/vendor/autoload.php';
+session_start();
+
+$client = new Google_Client();
+$client->setClientId('1041692668860-ltlh4m15m6nsdtaqmbodli294r6o7bme.apps.googleusercontent.com');
+$client->setClientSecret('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');
+$client->setRedirectUri('http://localhost/oreintation/callback.php');
+
+$client->addScope("email");
+$client->addScope("profile");
+
+// Database connection
+$conn = new mysqli('localhost', 'root', '', 'orientation_system');
+if ($conn->connect_error) {
+    die("Database connection failed: " . $conn->connect_error);
+}
+
+// Handle Google authentication
+if (isset($_GET['code'])) {
+    $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
+    if (isset($token['error'])) {
+        die("Error fetching access token: " . $token['error']);
+    }
+
+    $client->setAccessToken($token);
+
+    $google_oauth = new Google_Service_Oauth2($client);
+    $userInfo = $google_oauth->userinfo->get();
+
+    // Set session variables for email and name
+    $_SESSION['email'] = $userInfo->email;
+    $_SESSION['name'] = $userInfo->name;
+
+    // Check if the user exists in the database
+    $stmt = $conn->prepare("SELECT id, role, status FROM users WHERE email = ?");
+    $stmt->bind_param("s", $_SESSION['email']);
+    $stmt->execute();
+    $stmt->bind_result($user_id, $role, $status);
+    $stmt->fetch();
+
+    if ($user_id) {
+        // User exists
+        $_SESSION['user_id'] = $user_id;
+        $_SESSION['status'] = $status; // Fetch the status from the database
+
+        if ($role) {
+            // User has a role, set it in the session
+            $_SESSION['user_role'] = $role;
+
+            // Redirect based on role and status
+            if ($status !== 'approved') {
+                echo "Your account is pending approval by an admin.";
+                exit();
+            }
+
+            if ($role === 'admin') {
+                header('Location: admin/dashboard.php');
+                exit();
+            } elseif ($role === 'school_rep') {
+                header('Location: school_rep/dashboard.php');
+                exit();
+            } else {
+                header('Location: index.php');
+                exit();
+            }
+        } else {
+            // User exists but has no role, prompt for role selection
+            $_SESSION['user_role'] = null;
+            $stmt->close();
+            showRoleSelectionForm();
+            exit();
+        }
+    } else {
+        // New user, prompt for role selection
+        $stmt->close();
+        showRoleSelectionForm();
+        exit();
+    }
+}
+
+// Handle role submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
+    if (!isset($_SESSION['email']) || !isset($_SESSION['name'])) {
+        die("Session variables are not set. Please authenticate with Google again.");
+    }
+
+    $role = $_POST['role'];
+    $email = $_SESSION['email'];
+    $name = $_SESSION['name'];
+    $status = ($role === 'school_rep') ? 'pending' : 'approved'; // Pending approval for school_rep
+
+    // Check if the user already exists
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        // User exists, update their role and status
+        $stmt->close();
+        $stmt = $conn->prepare("UPDATE users SET role = ?, status = ? WHERE email = ?");
+        $stmt->bind_param("sss", $role, $status, $email);
+        $stmt->execute();
+    } else {
+        // New user, insert into the database
+        $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO users (email, name, role, status) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $email, $name, $role, $status);
+        $stmt->execute();
+    }
+
+    // Set session variables
+    $_SESSION['user_id'] = $conn->insert_id;
+    $_SESSION['user_role'] = $role;
+    $_SESSION['status'] = $status;
+
+    if ($role === 'admin') {
+        echo "Redirecting to admin dashboard...";
+        header('Location: admin/dashboard.php');
+        exit();
+    } elseif ($role === 'school_rep') {
+        if ($status === 'pending') {
+            echo "Your account is pending approval by an admin.";
+            exit();
+        } else {
+            echo "Redirecting to school_rep dashboard...";
+            header('Location: school_rep/dashboard.php');
+            exit();
+        }
+    } else {
+        echo "Redirecting to index...";
+        header('Location: index.php');
+        exit();
+    }
+}
+
+// Function to display the role selection form
+function showRoleSelectionForm() {
+    echo '<form method="POST" action="callback.php" style="background-color: #3E2723; color: #FFFFFF; padding: 20px; border-radius: 8px; width: 300px; margin: 50px auto; font-family: Arial, sans-serif;">';
+    echo '<h2 style="text-align: center; color: #FFCCBC;">Select Your Role</h2>';
+    echo '<label style="display: block; margin-bottom: 10px;">Choose one:</label>';
+    echo '<div style="margin-bottom: 15px;">';
+    echo '<input type="radio" id="student" name="role" value="student" required style="margin-right: 10px;">';
+    echo '<label for="student" style="cursor: pointer;">Student</label><br>';
+    echo '<input type="radio" id="school_rep" name="role" value="school_rep" required style="margin-right: 10px;">';
+    echo '<label for="school_rep" style="cursor: pointer;">School Representative</label>';
+    echo '</div>';
+    echo '<button type="submit" style="background-color: #5D4037; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">Submit</button>';
+    echo '</form>';
+}
+?>

@@ -1,3 +1,14 @@
+<?php
+// filepath: c:\xampp\htdocs\oreintation\index.php
+include("config/db.php");
+
+// Fetch universities from the database
+$query = "SELECT name, logo, motto, website FROM universities LIMIT 6"; // Limit to 6 universities for display
+$result = $conn->query($query);
+if (!$result) {
+    die("Error fetching universities: " . $conn->error);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +61,11 @@
         }
         .card:hover {
             transform: scale(1.05);
+        }
+        .card-img-top {
+            width: 100%;
+            height: 200px; /* Fixed height for all images */
+            object-fit: cover; /* Ensures the image fits within the box without distortion */
         }
         .testimonial {
             padding: 50px;
@@ -106,36 +122,26 @@
     <div class="container">
         <h2 class="text-center">Featured Universities</h2>
         <div class="row">
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="assets/a-photo-of-a-black-student-in-a-robe-hol_zfwsX2uZSIyjZhZ9WYrm3A_Snwcm-feTxmgu_7SujnuYQ.jpeg" class="card-img-top" alt="University">
-                    <div class="card-body">
-                        <h5 class="card-title">Harvard University</h5>
-                        <p class="card-text">Cambridge, MA</p>
-                        <a href="#" class="btn btn-primary">Apply Now</a>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <div class="col-md-4">
+                    <div class="card">
+                        <?php if (!empty($row['logo'])): ?>
+                            <img src="<?= htmlspecialchars($row['logo']) ?>" class="card-img-top" alt="<?= htmlspecialchars($row['name']) ?>">
+                        <?php else: ?>
+                            <img src="assets/default-university.png" class="card-img-top" alt="Default University">
+                        <?php endif; ?>
+                        <div class="card-body">
+                            <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
+                            <p class="card-text"><?= htmlspecialchars($row['motto']) ?></p>
+                            <?php if (!empty($row['website'])): ?>
+                                <a href="<?= htmlspecialchars($row['website']) ?>" target="_blank" class="btn btn-primary">Visit Website</a>
+                            <?php else: ?>
+                                <span class="btn btn-secondary disabled">No Website</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="assets/a-photo-of-a-black-student-in-a-robe-hol_yRiC2uWqTyuQLYY1jh0UiQ_Snwcm-feTxmgu_7SujnuYQ.jpeg" class="card-img-top" alt="University">
-                    <div class="card-body">
-                        <h5 class="card-title">Stanford University</h5>
-                        <p class="card-text">Stanford, CA</p>
-                        <a href="#" class="btn btn-primary">Apply Now</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="assets/a-medium-shot-of-a-black-student-in-a-ro_Eir6mopASi2J3FUR8J-0Jg_Snwcm-feTxmgu_7SujnuYQ.jpeg" class="card-img-top" alt="University">
-                    <div class="card-body">
-                        <h5 class="card-title">MIT</h5>
-                        <p class="card-text">Cambridge, MA</p>
-                        <a href="#" class="btn btn-primary">Apply Now</a>
-                    </div>
-                </div>
-            </div>
+            <?php endwhile; ?>
         </div>
     </div>
 </section>

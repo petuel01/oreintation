@@ -1,11 +1,17 @@
 <?php
 $current_page = "dashboard.php";
+
 session_start();
+// if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['admin']) || $_SESSION['status'] !== 'approved') {
+//     header("Location: ../login.php");
+//     exit();
+// }
+
 
 include '../config/db.php';
 
 // Fetch institutions data from database 
-$sql = "SELECT * FROM institutions";
+$sql = "SELECT * FROM universities";
 $result = $conn->query($sql);
 ?>
 
@@ -58,36 +64,57 @@ $result = $conn->query($sql);
                 <div class="card-header">
                     <h4>Institutions List</h4>
                 </div>
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Location</th>
-                                <th>Ranking</th>
-                                <th>Category</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo $row['name']; ?></td>
-                                    <td><?php echo $row['location']; ?></td>
-                                    <td><?php echo $row['ranking']; ?></td>
-                                    <td><?php echo $row['category']; ?></td>
-                                    
-                                    <td>
-                                        <a href="edit.php?id=<?php echo $row['id']; ?>"><i class="fas fa-edit text-primary"></i></a>
-                                        <a href="delete.php?id=<?php echo $row['id']; ?>" onclick="return confirm('Are you sure?')">
-                                            <i class="fas fa-trash text-danger"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead style="background-color: #4d2600; color: white;">
+            <tr>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>Logo</th>
+                <th>Motto</th>
+                <th>Established Year</th>
+                <th>Type</th>
+                <th>Accreditation Status</th>
+                <th>Website</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row['name']) ?></td>
+                    <td><?= htmlspecialchars($row['contact']) ?></td>
+                    <td>
+                        <?php if (!empty($row['logo'])): ?>
+                            <img src="../<?= htmlspecialchars($row['logo']) ?>" alt="Institution Logo" style="width: 100px; height: auto;">
+                        <?php else: ?>
+                            No Logo Available
+                        <?php endif; ?>
+                    </td>
+                    <td><?= htmlspecialchars($row['motto']) ?></td>
+                    <td><?= htmlspecialchars($row['established_year']) ?></td>
+                    <td><?= htmlspecialchars($row['type']) ?></td>
+                    <td><?= htmlspecialchars($row['accreditation_status']) ?></td>
+                    <td>
+                        <?php if (!empty($row['website'])): ?>
+                            <a href="<?= htmlspecialchars($row['website']) ?>" target="_blank"><?= htmlspecialchars($row['website']) ?></a>
+                        <?php else: ?>
+                            No Website
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <a href="edit_institution.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="delete_institution.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm" title="Delete" onclick="return confirm('Are you sure you want to delete this institution?');">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+        </tbody>
+    </table>
+</div>
             </div>
 
         </div>

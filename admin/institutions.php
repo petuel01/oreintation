@@ -4,13 +4,13 @@ $current_page = "institutions.php";
 include("sidebar.php");
 include("../config/db.php");
 
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['admin', 'school_rep'])) {
+    header("Location: ../login.php");
     exit();
 }
 
 // Fetch Institutions
-$result = $conn->query("SELECT * FROM institutions");
+$result = $conn->query("SELECT * FROM universities");
 ?>
 
 
@@ -46,37 +46,66 @@ $result = $conn->query("SELECT * FROM institutions");
                 Add Institution
             </div>
             <div class="card-body">
-                <form action="add_institution.php" method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Institution Name</label>
-                        <input type="text" name="name" id="name" class="form-control" placeholder="Institution Name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contact" class="form-label">Contact Info</label>
-                        <input type="text" name="contact" id="contact" class="form-control" placeholder="Contact Info" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea name="description" id="description" class="form-control" placeholder="Description"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="image" class="form-label">Institution Image</label>
-                        <input type="file" name="image" id="image" class="form-control" accept="image/*" required>
-                    </div>
-                    <button type="submit" class="btn" style="background-color: #4d2600; color: white;">Add Institution</button>
-                </form>
+            <form action="add_institution.php" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="name" class="form-label">Institution Name</label>
+        <input type="text" name="name" id="name" class="form-control" placeholder="Institution Name" required>
+    </div>
+    <div class="mb-3">
+        <label for="contact" class="form-label">Contact Info</label>
+        <input type="text" name="contact" id="contact" class="form-control" placeholder="Contact Info" required>
+    </div>
+    <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea name="description" id="description" class="form-control" placeholder="Description" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="logo" class="form-label">Logo</label>
+        <input type="file" name="logo" id="logo" class="form-control" accept="image/*">
+    </div>
+    <div class="mb-3">
+        <label for="motto" class="form-label">Motto</label>
+        <input type="text" name="motto" id="motto" class="form-control" placeholder="Motto">
+    </div>
+    <div class="mb-3">
+        <label for="established_year" class="form-label">Established Year</label>
+        <input type="number" name="established_year" id="established_year" class="form-control" placeholder="Established Year">
+    </div>
+    <div class="mb-3">
+        <label for="type" class="form-label">Type</label>
+        <select name="type" id="type" class="form-control" required>
+            <option value="Public">Public</option>
+            <option value="Private">Private</option>
+            <option value="Religious">Religious</option>
+            <option value="International">International</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="accreditation_status" class="form-label">Accreditation Status</label>
+        <input type="text" name="accreditation_status" id="accreditation_status" class="form-control" placeholder="Accreditation Status" required>
+    </div>
+    <div class="mb-3">
+        <label for="website" class="form-label">Website</label>
+        <input type="url" name="website" id="website" class="form-control" placeholder="Website URL" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Institution</button>
+</form>
             </div>
         </div>
 
         <h3>Institution List</h3>
-        <div class="table-responsive">
+                <div class="table-responsive">
             <table class="table table-bordered table-striped">
-                <thead  style="background-color: #4d2600; color: white;">
+                <thead style="background-color: #4d2600; color: white;">
                     <tr>
                         <th>Name</th>
                         <th>Contact</th>
-                        <th>Image</th>
-                        <th>Location</th>
+                        <th>Logo</th>
+                        <th>Motto</th>
+                        <th>Established Year</th>
+                        <th>Type</th>
+                        <th>Accreditation Status</th>
+                        <th>Website</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -86,13 +115,23 @@ $result = $conn->query("SELECT * FROM institutions");
                             <td><?= htmlspecialchars($row['name']) ?></td>
                             <td><?= htmlspecialchars($row['contact']) ?></td>
                             <td>
-                                <?php if (!empty($row['image'])): ?>
-                                    <img src="data:image/jpeg;base64,<?= base64_encode($row['image']) ?>" alt="Institution Image" style="width: 100px; height: auto;">
+                                <?php if (!empty($row['logo'])): ?>
+                                    <img src="../<?= htmlspecialchars($row['logo']) ?>" alt="Institution Logo" style="width: 100px; height: auto;">
                                 <?php else: ?>
-                                    No Image Available
+                                    No Logo Available
                                 <?php endif; ?>
                             </td>
-                            <td><?= htmlspecialchars($row['location']) ?></td>
+                            <td><?= htmlspecialchars($row['motto']) ?></td>
+                            <td><?= htmlspecialchars($row['established_year']) ?></td>
+                            <td><?= htmlspecialchars($row['type']) ?></td>
+                            <td><?= htmlspecialchars($row['accreditation_status']) ?></td>
+                            <td>
+                                <?php if (!empty($row['website'])): ?>
+                                    <a href="<?= htmlspecialchars($row['website']) ?>" target="_blank"><?= htmlspecialchars($row['website']) ?></a>
+                                <?php else: ?>
+                                    No Website
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <a href="edit_institution.php?id=<?= $row['id'] ?>" class="btn btn-primary btn-sm" title="Edit">
                                     <i class="fas fa-edit"></i>

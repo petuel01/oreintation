@@ -4,8 +4,8 @@ $current_page = "users.php";
 include("sidebar.php");
 include("../config/db.php");
 
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['admin', 'school_rep'])) {
+    header("Location: ../login.php");
     exit();
 }
 
