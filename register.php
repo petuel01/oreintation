@@ -1,4 +1,6 @@
+<!-- filepath: c:\xampp\htdocs\oreintation\register.php -->
 <?php
+session_start();
 require_once __DIR__ . '/vendor/autoload.php';
 
 $client = new Google_Client();
@@ -10,82 +12,11 @@ $client->addScope("profile");
 
 $auth_url = $client->createAuthUrl();
 
-
-
-
-
-// Include database connection
-include("config/db.php");
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $password = trim($_POST['password']);
-    $re_password = trim($_POST['re_password']);
-    $role = trim($_POST['role']);
-    $errors = [];
-
-    // Form validation
-    if (empty($name)) {
-        $errors[] = 'Name is required.';
-    }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Invalid email format.';
-    }
-    if (empty($password)) {
-        $errors[] = 'Password is required.';
-    } elseif (strlen($password) < 8) {
-        $errors[] = 'Password must be at least 8 characters long.';
-    } elseif (!preg_match('/[A-Z]/', $password)) {
-        $errors[] = 'Password must contain at least one uppercase letter.';
-    } elseif (!preg_match('/[a-z]/', $password)) {
-        $errors[] = 'Password must contain at least one lowercase letter.';
-    } elseif (!preg_match('/[0-9]/', $password)) {
-        $errors[] = 'Password must contain at least one number.';
-    } elseif (!preg_match('/[\W_]/', $password)) {
-        $errors[] = 'Password must contain at least one special character.';
-    }
-    if ($password !== $re_password) {
-        $errors[] = 'Passwords do not match.';
-    }
-    if (empty($role)) {
-        $errors[] = 'Role is required.';
-    }
-
-    if (empty($errors)) {
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-
-        // Insert into the database
-        $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $name, $email, $hashedPassword, $role);
-
-        if ($stmt->execute()) {
-            // Start session and set session variables
-            session_start();
-            $_SESSION['user_id'] = $conn->insert_id;
-            $_SESSION['user_name'] = $name;
-            $_SESSION['user_role'] = $role;
-
-            // Redirect based on role
-            if ($role === 'admin' || $role === 'school_representative') {
-                header("Location: admin/dashboard.php");
-            } elseif ($role === 'student') {
-                header("Location: index.php");
-            }
-            exit();
-        } else {
-            $errors[] = "Error: " . $stmt->error;
-        }
-
-        $stmt->close();
-    }
-}
-
-// Fetch users for display
-
-$result = $conn->query("SELECT * FROM users");
+// Retrieve errors and success messages from session
+$errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
+$success = isset($_SESSION['success']) ? $_SESSION['success'] : null;
+unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displaying
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +24,7 @@ $result = $conn->query("SELECT * FROM users");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         body {
             margin: 0;
@@ -142,7 +74,14 @@ $result = $conn->query("SELECT * FROM users");
                 flex: 1;
             }
         }
+        .strength-bar {
+            width: 30%;
+            height: 5px;
+            margin: 0 2px;
+            border-radius: 3px;
+        }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
     <div class="left-side">
@@ -152,6 +91,7 @@ $result = $conn->query("SELECT * FROM users");
         <div class="form-container">
             <h2 class="text-center">Register User</h2>
 
+            <!-- Display Errors -->
             <?php if (!empty($errors)): ?>
                 <div class="alert alert-danger">
                     <ul>
@@ -162,13 +102,14 @@ $result = $conn->query("SELECT * FROM users");
                 </div>
             <?php endif; ?>
 
+            <!-- Display Success Message -->
             <?php if (!empty($success)): ?>
                 <div class="alert alert-success">
                     <?= htmlspecialchars($success) ?>
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="">
+            <form method="POST" action="process_register.php">
                 <div class="mb-2">
                     <label for="name" class="form-label">Name</label>
                     <input type="text" class="form-control form-control-sm" id="name" name="name" required>
@@ -201,88 +142,95 @@ $result = $conn->query("SELECT * FROM users");
                         </button>
                     </div>
                 </div>
-                <script>
-                    function togglePasswordVisibility(fieldId) {
-                        const field = document.getElementById(fieldId);
-                        const icon = field.nextElementSibling.querySelector('i');
-                        if (field.type === 'password') {
-                            field.type = 'text';
-                            icon.classList.remove('bi-eye');
-                            icon.classList.add('bi-eye-slash');
-                        } else {
-                            field.type = 'password';
-                            icon.classList.remove('bi-eye-slash');
-                            icon.classList.add('bi-eye');
-                        }
-                    }
-
-                    function checkPasswordStrength() {
-                        const password = document.getElementById('password').value;
-                        const weakBar = document.getElementById('weak-bar');
-                        const averageBar = document.getElementById('average-bar');
-                        const strongBar = document.getElementById('strong-bar');
-                        const strengthText = document.getElementById('password-strength-text');
-                        let strength = 0;
-
-                        if (password.length >= 8) strength++;
-                        if (/[A-Z]/.test(password)) strength++;
-                        if (/[a-z]/.test(password)) strength++;
-                        if (/[0-9]/.test(password)) strength++;
-                        if (/[\W_]/.test(password)) strength++;
-
-                        weakBar.className = 'strength-bar bg-secondary';
-                        averageBar.className = 'strength-bar bg-secondary';
-                        strongBar.className = 'strength-bar bg-secondary';
-
-                        if (strength >= 1) weakBar.className = 'strength-bar bg-danger';
-                        if (strength >= 3) averageBar.className = 'strength-bar bg-warning';
-                        if (strength >= 5) strongBar.className = 'strength-bar bg-success';
-
-                        switch (strength) {
-                            case 0:
-                            case 1:
-                                strengthText.textContent = 'Weak';
-                                break;
-                            case 2:
-                            case 3:
-                                strengthText.textContent = 'Average';
-                                break;
-                            case 4:
-                            case 5:
-                                strengthText.textContent = 'Strong';
-                                break;
-                        }
-                    }
-                </script>
-                <style>
-                    .strength-bar {
-                        width: 30%;
-                        height: 5px;
-                        margin: 0 2px;
-                        border-radius: 3px;
-                    }
-                </style>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
                 <div class="mb-2">
                     <label for="role" class="form-label">Role</label>
-                    <select class="form-select form-select-sm" id="rolse" name="role" required>
+                    <select class="form-select form-select-sm" id="role" name="role" onchange="toggleUniversityField()" required>
                         <option value="" disabled selected>Select role</option>
-                        <option value="student">student</option>
-                        <option value="school_representative">school_rep
-                        </option>
+                        <option value="student">Student</option>
+                        <option value="school_rep">School Representative</option>
                     </select>
+                </div>
+                <div class="mb-2" id="university-field" style="display: none;">
+                    <label for="university" class="form-label">University Name</label>
+                    <input type="text" class="form-control form-control-sm" id="university" name="university">
+                </div>
+                
+                <div class="mb-2">
+                    <div class="g-recaptcha" data-sitekey="6Le9iT4rAAAAAG9LWxMeJD5qIxltjDmyWwNQxRJr"></div>
                 </div>
                 <button type="submit" class="btn btn-dark-brown w-100">Register</button>
                 <div class="text-center mt-2">
                     <a href="login.php" style="color:rgb(141, 125, 82);">Already have an account? Login</a>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="<?= htmlspecialchars($auth_url) ?>">
-                        <img src="https://developers.google.com/identity/images/btn_google_signin_dark_normal_web.png" alt="Sign in with Google" />
-                    </a>
-                </div>
+                <a href="<?= htmlspecialchars($auth_url) ?>">
+                    <img src="https://developers.google.com/identity/images/btn_google_signin_dark_normal_web.png" alt="Sign in with Google" />
+                </a>
             </form>
         </div>
     </div>
+    <script>
+        function toggleUniversityField() {
+            const role = document.getElementById('role').value;
+            const universityField = document.getElementById('university-field');
+            if (role === 'school_rep') {
+                universityField.style.display = 'block';
+            } else {
+                universityField.style.display = 'none';
+            }
+        }
+
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = field.nextElementSibling.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const weakBar = document.getElementById('weak-bar');
+            const averageBar = document.getElementById('average-bar');
+            const strongBar = document.getElementById('strong-bar');
+            const strengthText = document.getElementById('password-strength-text');
+            let strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[\W_]/.test(password)) strength++;
+
+            weakBar.className = 'strength-bar bg-secondary';
+            averageBar.className = 'strength-bar bg-secondary';
+            strongBar.className = 'strength-bar bg-secondary';
+
+            if (strength >= 1) weakBar.className = 'strength-bar bg-danger';
+            if (strength >= 3) averageBar.className = 'strength-bar bg-warning';
+            if (strength >= 5) strongBar.className = 'strength-bar bg-success';
+
+            switch (strength) {
+                case 0:
+                case 1:
+                    strengthText.textContent = 'Weak';
+                    break;
+                case 2:
+                case 3:
+                    strengthText.textContent = 'Average';
+                    break;
+                case 4:
+                case 5:
+                    strengthText.textContent = 'Strong';
+                    break;
+            }
+        }
+    </script>
 </body>
 </html>

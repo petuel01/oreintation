@@ -1,6 +1,5 @@
 <?php session_start(); 
 
-
 require_once __DIR__ . '/vendor/autoload.php';
 
 $client = new Google_Client();
@@ -11,6 +10,10 @@ $client->addScope("email");
 $client->addScope("profile");
 
 $auth_url = $client->createAuthUrl();
+
+// Retrieve errors from session
+$errors = isset($_SESSION['errors']) ? $_SESSION['errors'] : [];
+unset($_SESSION['errors']); // Clear errors after displaying
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -86,6 +89,8 @@ $auth_url = $client->createAuthUrl();
             }
         }
     </style>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="image-container">
@@ -94,6 +99,18 @@ $auth_url = $client->createAuthUrl();
     <div class="login-container">
         <div class="login-box">
             <h2 class="text-center" style="color: white;">Admin Login</h2>
+
+            <!-- Display Errors -->
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-danger">
+                    <ul>
+                        <?php foreach ($errors as $error): ?>
+                            <li><?= htmlspecialchars($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
             <form action="process_login.php" method="post" onsubmit="return validateForm()">
                 <div class="mb-3">
                     <input type="email" id="email" name="email" class="form-control" placeholder="Email" required>
@@ -120,6 +137,7 @@ $auth_url = $client->createAuthUrl();
                     }
                 </script>
                 <a href="forgot_password.php" style="color:rgb(141, 125, 82);">Forgot Password?</a>
+                <div class="g-recaptcha mb-3" data-sitekey="6Le9iT4rAAAAAG9LWxMeJD5qIxltjDmyWwNQxRJr"></div>
                 <button type="submit" class="btn btn-primary w-100">Login</button>
             </form>
             <div class="text-center mt-3">

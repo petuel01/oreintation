@@ -1,8 +1,9 @@
+<!-- filepath: c:\xampp\htdocs\oreintation\setup.php -->
 <?php
 $host = 'localhost';
 $user = 'root';
 $password = ''; // Change if you have a password
-$dbName = 'orientation_system'; 
+$dbName = 'orientation_system';
 
 // Connect to MySQL
 $conn = new mysqli($host, $user, $password);
@@ -22,183 +23,156 @@ if ($conn->query($sql) === TRUE) {
 
 $conn->select_db($dbName);
 
-// User roles table
+// Users Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    password VARCHAR(255),
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'school_rep', 'student') NOT NULL,
     university_id INT DEFAULT NULL,
     status ENUM('pending', 'approved') DEFAULT 'approved',
     reset_token VARCHAR(64) DEFAULT NULL,
     reset_expires DATETIME DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE SET NULL
 )");
 
-// Universities
+// Universities Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS universities (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     logo VARCHAR(255),
     motto TEXT,
     established_year INT,
     type ENUM('Public', 'Private', 'Religious', 'International') NOT NULL,
     accreditation_status VARCHAR(255),
-    website VARCHAR(255)
+    website VARCHAR(255),
+    location VARCHAR(255), -- Added for city/region
+    description TEXT, -- Added for university overview
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )");
 
-// Location
+// Locations Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS locations (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    country VARCHAR(100),
+    university_id INT NOT NULL,
+    country VARCHAR(100) NOT NULL,
     region VARCHAR(100),
     city VARCHAR(100),
     address TEXT,
     map_link VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 )");
 
-// Contact
+// Contacts Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
+    university_id INT NOT NULL,
     email VARCHAR(255),
     phone VARCHAR(50),
     whatsapp VARCHAR(50),
     telegram VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 )");
 
-// Social Links
+// Social Links Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS social_links (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
+    university_id INT NOT NULL,
     facebook VARCHAR(255),
     instagram VARCHAR(255),
     twitter VARCHAR(255),
     youtube VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 )");
 
-// Faculties
+// Faculties Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS faculties (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    faculty_name VARCHAR(255),
+    university_id INT NOT NULL,
+    faculty_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 )");
 
-// Programs
+// Programs Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS programs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    faculty_id INT,
-    program_name VARCHAR(255),
+    faculty_id INT NOT NULL,
+    program_name VARCHAR(255) NOT NULL,
     duration VARCHAR(50),
     degree_type VARCHAR(100),
     language VARCHAR(100),
     admission_requirements TEXT,
+    fees DECIMAL(10, 2), -- Added for program fees
+    scholarship_availability BOOLEAN DEFAULT FALSE, -- Added for scholarship availability
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (faculty_id) REFERENCES faculties(id) ON DELETE CASCADE
 )");
 
-// Fees
+// Fees Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS fees (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    program_id INT,
+    program_id INT NOT NULL,
     local_tuition DECIMAL(10, 2),
     international_tuition DECIMAL(10, 2),
     application_fee DECIMAL(10, 2),
     other_fees TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 )");
 
-// Scholarships
+// Scholarships Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS scholarships (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    scholarship_name VARCHAR(255),
+    university_id INT NOT NULL,
+    scholarship_name VARCHAR(255) NOT NULL,
     description TEXT,
     eligibility TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 )");
 
-// Accommodation
+// Applications Table
 $conn->query("
-CREATE TABLE IF NOT EXISTS accommodation (
+CREATE TABLE IF NOT EXISTS applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    on_campus BOOLEAN,
-    cost_range VARCHAR(100),
-    facilities TEXT,
-    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
+    university_id INT NOT NULL,
+    student_name VARCHAR(255) NOT NULL,
+    program_id INT NOT NULL,
+    status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending', -- Added for application status
+    application_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 )");
 
-// Campus Facilities
-$conn->query("
-CREATE TABLE IF NOT EXISTS campus_facilities (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    library BOOLEAN,
-    sports_complex BOOLEAN,
-    laboratories BOOLEAN,
-    tech_centers BOOLEAN,
-    cafeteria BOOLEAN,
-    health_services BOOLEAN,
-    religious_centers TEXT,
-    clubs TEXT,
-    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
-)");
-
-// International Info
-$conn->query("
-CREATE TABLE IF NOT EXISTS international_info (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    visa_support BOOLEAN,
-    exchange_programs BOOLEAN,
-    international_office_contact VARCHAR(255),
-    integration_support TEXT,
-    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
-)");
-
-// Career Services
-$conn->query("
-CREATE TABLE IF NOT EXISTS career_services (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    internship_opportunities BOOLEAN,
-    company_partnerships TEXT,
-    job_placement_rate VARCHAR(50),
-    career_counseling BOOLEAN,
-    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
-)");
-
-// Media Gallery
-$conn->query("
-CREATE TABLE IF NOT EXISTS media_gallery (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
-    media_type ENUM('Photo', 'Video'),
-    media_url VARCHAR(255),
-    description TEXT,
-    FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
-)");
-
-// Student Reviews
+// Student Reviews Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS student_reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    university_id INT,
+    university_id INT NOT NULL,
     rating_overall INT,
     rating_teaching INT,
     rating_facilities INT,
@@ -211,7 +185,7 @@ CREATE TABLE IF NOT EXISTS student_reviews (
     FOREIGN KEY (university_id) REFERENCES universities(id) ON DELETE CASCADE
 )");
 
-// Blog / News
+// Blog / News Table
 $conn->query("
 CREATE TABLE IF NOT EXISTS blog_news (
     id INT AUTO_INCREMENT PRIMARY KEY,

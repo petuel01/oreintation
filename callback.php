@@ -4,6 +4,9 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 session_start();
 
 $client = new Google_Client();
@@ -37,22 +40,53 @@ if (isset($_GET['code'])) {
     $_SESSION['name'] = $userInfo->name;
 
     // Check if the user exists in the database
-    $stmt = $conn->prepare("SELECT id, role, status FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id, role, status, university_id FROM users WHERE email = ?");
     $stmt->bind_param("s", $_SESSION['email']);
     $stmt->execute();
-    $stmt->bind_result($user_id, $role, $status);
+    $stmt->bind_result($user_id, $role, $status, $university_id);
     $stmt->fetch();
 
     if ($user_id) {
         // User exists
         $_SESSION['user_id'] = $user_id;
-        $_SESSION['status'] = $status; // Fetch the status from the database
+        $_SESSION['status'] = $status;
+        $_SESSION['university_id'] = $university_id;
 
         if ($role) {
             // User has a role, set it in the session
             $_SESSION['user_role'] = $role;
 
             // Redirect based on role and status
+            if ($role === 'school_rep' && $status === 'pending') {
+                // Send email to the admin
+
+                $mail = new PHPMailer(true);
+                try {
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.gmail.com'; // Gmail SMTP server
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'baifempetuel0.2@gmail.com'; // Your Gmail address
+                    $mail->Password = 'mceq hojx joal awrx'; // Your Gmail app password
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port = 587;
+
+                    // Email to the admin
+                    $mail->setFrom('admin@example.com', 'Admin');
+                    $mail->addAddress('admin@example.com'); // Replace with admin email
+                    $mail->isHTML(true);
+                    $mail->Subject = 'New School Representative Registration';
+                    $mail->Body = "A new school representative has registered.<br><br>Name: {$_SESSION['name']}<br>Email: {$_SESSION['email']}<br><br><a href='http://localhost/oreintation/admin/approve_school_reps.php'>Click here to approve the account</a>";
+
+                    $mail->send();
+                } catch (Exception $e) {
+                    error_log("Admin notification email could not be sent. Mailer Error: {$mail->ErrorInfo}");
+                }
+
+                // Redirect to the pending approval page
+                header('Location: pending_approval.php');
+                exit();
+            }
+
             if ($status !== 'approved') {
                 echo "Your account is pending approval by an admin.";
                 exit();
@@ -94,6 +128,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     $name = $_SESSION['name'];
     $status = ($role === 'school_rep') ? 'pending' : 'approved'; // Pending approval for school_rep
 
+    $university_id = null;
+    if ($role === 'school_rep') {
+        $university_name = trim($_POST['university']);
+
+        // Check if the university already exists
+        $stmt = $conn->prepare("SELECT id FROM universities WHERE name = ?");
+        $stmt->bind_param("s", $university_name);
+        $stmt->execute();
+        $stmt->bind_result($university_id);
+        $stmt->fetch();
+        $stmt->close();
+
+        // If the university does not exist, insert it
+        if (!$university_id) {
+            $stmt = $conn->prepare("INSERT INTO universities (name) VALUES (?)");
+            $stmt->bind_param("s", $university_name);
+            $stmt->execute();
+            $university_id = $conn->insert_id;
+            $stmt->close();
+        }
+    }
+
     // Check if the user already exists
     $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
@@ -101,16 +157,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     $stmt->store_result();
 
     if ($stmt->num_rows > 0) {
-        // User exists, update their role and status
+        // User exists, update their role, status, and university_id
         $stmt->close();
-        $stmt = $conn->prepare("UPDATE users SET role = ?, status = ? WHERE email = ?");
-        $stmt->bind_param("sss", $role, $status, $email);
+        $stmt = $conn->prepare("UPDATE users SET role = ?, status = ?, university_id = ? WHERE email = ?");
+        $stmt->bind_param("ssis", $role, $status, $university_id, $email);
         $stmt->execute();
     } else {
         // New user, insert into the database
         $stmt->close();
-        $stmt = $conn->prepare("INSERT INTO users (email, name, role, status) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $email, $name, $role, $status);
+        $stmt = $conn->prepare("INSERT INTO users (email, name, role, status, university_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssi", $email, $name, $role, $status, $university_id);
         $stmt->execute();
     }
 
@@ -118,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     $_SESSION['user_id'] = $conn->insert_id;
     $_SESSION['user_role'] = $role;
     $_SESSION['status'] = $status;
+    $_SESSION['university_id'] = $university_id;
 
     if ($role === 'admin') {
         echo "Redirecting to admin dashboard...";
@@ -126,6 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     } elseif ($role === 'school_rep') {
         if ($status === 'pending') {
             echo "Your account is pending approval by an admin.";
+            echo '<br><a href="login.php" style="background-color: #5D4037; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 16px;">Proceed to Login</a>';
             exit();
         } else {
             echo "Redirecting to school_rep dashboard...";
@@ -150,7 +208,25 @@ function showRoleSelectionForm() {
     echo '<input type="radio" id="school_rep" name="role" value="school_rep" required style="margin-right: 10px;">';
     echo '<label for="school_rep" style="cursor: pointer;">School Representative</label>';
     echo '</div>';
+    echo '<div id="university-input" style="display: none; margin-bottom: 15px;">';
+    echo '<label for="university" style="display: block; margin-bottom: 5px;">University Name:</label>';
+    echo '<input type="text" id="university" name="university" class="form-control" placeholder="Enter University Name" style="width: 100%;" required>';
+    echo '</div>';
     echo '<button type="submit" style="background-color: #5D4037; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">Submit</button>';
     echo '</form>';
+
+    // JavaScript to toggle university input
+    echo '<script>
+        document.querySelectorAll("input[name=\'role\']").forEach(radio => {
+            radio.addEventListener("change", function() {
+                const universityInput = document.getElementById("university-input");
+                if (this.value === "school_rep") {
+                    universityInput.style.display = "block";
+                } else {
+                    universityInput.style.display = "none";
+                }
+            });
+        });
+    </script>';
 }
 ?>

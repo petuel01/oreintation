@@ -1,62 +1,66 @@
+<!-- filepath: c:\xampp\htdocs\oreintation\index.php -->
 <?php
-// filepath: c:\xampp\htdocs\oreintation\index.php
 include("config/db.php");
-
-// Fetch universities from the database
-$query = "SELECT name, logo, motto, website FROM universities LIMIT 6"; // Limit to 6 universities for display
-$result = $conn->query($query);
-if (!$result) {
-    die("Error fetching universities: " . $conn->error);
-}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniGuide - Find Your Perfect University</title>
+    <title>UniGuide - Find Universities in Cameroon</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Global Styles */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #fdf8f4;
-        }
-        .navbar {
-            background: #fff;
-            padding: 15px;
-        }
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .btn-primary {
-            background: #ff7f50;
-            border: none;
-        }
-        .btn-outline-primary {
-            border: 2px solid #ff7f50;
-            color: #ff7f50;
-        }
+        /* Hero Section */
         .hero {
+            background: url('assets/hero-bg.jpg') no-repeat center center/cover;
             padding: 100px 0;
-            background: #fdf8f4;
+            color: white;
+            text-align: center;
         }
         .hero h1 {
             font-weight: bold;
-            font-size: 2.5rem;
+            font-size: 3rem;
         }
-        .hero img {
-            max-width: 100%;
+        .hero p {
+            font-size: 1.2rem;
         }
+        .search-bar {
+            margin-top: 20px;
+        }
+        .search-bar input,
+        .search-bar select {
+            border: 2px solid #5D4037; /* Dark brown */
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .search-bar input:focus,
+        .search-bar select:focus {
+            outline: none;
+            border-color: #4E342E; /* Darker brown */
+            box-shadow: 0 0 5px rgba(93, 64, 55, 0.5);
+        }
+        .search-bar button {
+            background-color: #5D4037; /* Dark brown */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .search-bar button:hover {
+            background-color: #4E342E; /* Darker brown */
+        }
+
+        /* Featured Section */
         .featured {
             background: #fff;
             padding: 50px 0;
         }
         .card {
             border: none;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
             transition: 0.3s;
         }
         .card:hover {
@@ -64,13 +68,23 @@ if (!$result) {
         }
         .card-img-top {
             width: 100%;
-            height: 200px; /* Fixed height for all images */
-            object-fit: cover; /* Ensures the image fits within the box without distortion */
+            height: 200px;
+            object-fit: cover;
         }
-        .testimonial {
-            padding: 50px;
-            background: #ffedd5;
+        .btn-primary {
+            background-color: #5D4037; /* Dark brown */
+            border: none;
         }
+        .btn-primary:hover {
+            background-color: #4E342E; /* Darker brown */
+        }
+
+        /* Star Rating */
+        .stars {
+            color: #FFD700; /* Gold color for stars */
+        }
+
+        /* Footer */
         .footer {
             background: #333;
             color: white;
@@ -81,83 +95,73 @@ if (!$result) {
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light">
-    <div class="container">
-        <a class="navbar-brand" href="#">UniGuide</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#">Universities</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Careers</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
-                <li class="nav-item"><a class="btn btn-primary ms-3" href="#">Get Started</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<!-- Include Navbar -->
+<?php include("sidebar.php"); ?>
+<br>
+<br>
 
-<!-- Hero Section -->
-<section class="hero text-center">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h1>Find the Perfect University for Your Future!</h1>
-                <p>Explore institutions, get career guidance, and make the best decision for your future.</p>
-                <a href="#" class="btn btn-primary">Start Exploring</a>
-                <a href="#" class="btn btn-outline-primary">Get Career Advice</a>
-            </div>
-            <div class="col-md-6">
-                <img src="assets/a.jpeg" alt="Hero Image">
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Featured Universities -->
-<section class="featured">
-    <div class="container">
-        <h2 class="text-center">Featured Universities</h2>
-        <div class="row">
-            <?php while ($row = $result->fetch_assoc()): ?>
-                <div class="col-md-4">
-                    <div class="card">
-                        <?php if (!empty($row['logo'])): ?>
-                            <img src="<?= htmlspecialchars($row['logo']) ?>" class="card-img-top" alt="<?= htmlspecialchars($row['name']) ?>">
-                        <?php else: ?>
-                            <img src="assets/default-university.png" class="card-img-top" alt="Default University">
-                        <?php endif; ?>
-                        <div class="card-body">
-                            <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
-                            <p class="card-text"><?= htmlspecialchars($row['motto']) ?></p>
-                            <?php if (!empty($row['website'])): ?>
-                                <a href="<?= htmlspecialchars($row['website']) ?>" target="_blank" class="btn btn-primary">Visit Website</a>
+<div class="content">
+    <!-- Hero Section -->
+    <?php include("hero.php"); ?>
+<br>
+    <!-- Featured Universities Section -->
+    <section class="featured">
+        <div class="container">
+            <h2 class="text-center">Featured Universities</h2>
+            <div class="row">
+                               <?php
+                $query = "SELECT 
+                            u.id, 
+                            u.name, 
+                            u.logo, 
+                            u.motto, 
+                            u.location, 
+                            IFNULL(AVG(r.rating_overall), 0) AS average_rating
+                          FROM universities u
+                          LEFT JOIN student_reviews r ON u.id = r.university_id
+                          GROUP BY u.id
+                          LIMIT 6"; // Limit to 6 universities for display
+                $result = $conn->query($query);
+                if (!$result) {
+                    die("Error fetching universities: " . $conn->error);
+                }
+                while ($row = $result->fetch_assoc()): ?>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <?php if (!empty($row['logo'])): ?>
+                                <img src="<?= htmlspecialchars($row['logo']) ?>" class="card-img-top" alt="<?= htmlspecialchars($row['name']) ?>">
                             <?php else: ?>
-                                <span class="btn btn-secondary disabled">No Website</span>
+                                <img src="assets/default-university.png" class="card-img-top" alt="Default University">
                             <?php endif; ?>
+                            <div class="card-body">
+                                <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
+                                <p class="card-text"><?= htmlspecialchars($row['motto']) ?></p>
+                                <p class="card-text"><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($row['location']) ?></p>
+                                <!-- Display Star Rating -->
+                                <p class="card-text stars">
+                                    <?php
+                                    $rating = round($row['average_rating']); // Round the average rating
+                                    if ($rating > 0): // If there are reviews
+                                        for ($i = 1; $i <= 5; $i++): ?>
+                                            <i class="fas fa-star<?= $i <= $rating ? '' : '-o' ?>"></i>
+                                        <?php endfor; ?>
+                                        <span>(<?= number_format($row['average_rating'], 1) ?>)</span>
+                                    <?php else: // No reviews yet ?>
+                                        <span>No reviews yet</span>
+                                    <?php endif; ?>
+                                </p>
+                                <a href="university_details.php?id=<?= $row['id'] ?>" class="btn btn-primary">View Details</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <?php endwhile; ?>
+                <?php endwhile; ?>
+            </div>
         </div>
-    </div>
-</section>
-
-<!-- Testimonials -->
-<section class="testimonial text-center">
-    <div class="container">
-        <h2>What Students Say</h2>
-        <p>"UniGuide helped me find my dream university and career path!" - Jane Doe</p>
-    </div>
-</section>
+    </section>
+</div>
 
 <!-- Footer -->
-<footer class="footer">
-    <p>© 2025 UniGuide. All Rights Reserved.</p>
-</footer>
+<?php include("footer.php"); ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

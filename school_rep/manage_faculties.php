@@ -1,0 +1,75 @@
+<!-- filepath: c:\xampp\htdocs\oreintation\school_rep\manage_faculties.php -->
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'school_rep' || $_SESSION['status'] !== 'approved') {
+    header("Location: ../login.php");
+    exit();
+}
+
+include '../config/db.php';
+
+// Ensure university_id is set in the session
+if (!isset($_SESSION['university_id'])) {
+    die("Error: University ID is not set in the session. Please log in again.");
+}
+
+$university_id = $_SESSION['university_id'];
+
+// Fetch faculties for the university
+$faculties = [];
+$result = $conn->query("SELECT id, faculty_name FROM faculties WHERE university_id = $university_id");
+if ($result) {
+    $faculties = $result->fetch_all(MYSQLI_ASSOC);
+}
+
+// Handle delete action
+if (isset($_GET['delete_id'])) {
+    $delete_id = intval($_GET['delete_id']);
+    $conn->query("DELETE FROM faculties WHERE id = $delete_id");
+    header("Location: manage_faculties.php");
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Faculties</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Manage Faculties</h2>
+        <a href="add_faculty.php" class="btn btn-success mb-3">Add New Faculty</a>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Faculty Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($faculties)): ?>
+                    <?php foreach ($faculties as $index => $faculty): ?>
+                        <tr>
+                            <td><?= $index + 1; ?></td>
+                            <td><?= htmlspecialchars($faculty['faculty_name']); ?></td>
+                            <td>
+                                <a href="edit_faculty.php?id=<?= $faculty['id']; ?>" class="btn btn-primary btn-sm">Edit</a>
+                                <a href="manage_faculties.php?delete_id=<?= $faculty['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this faculty?');">Delete</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="3" class="text-center">No faculties found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -39,60 +39,6 @@ $result = $conn->query("SELECT * FROM universities");
             <a href="dashboard.php" class="btn  mb-3"  style="background-color: #4d2600; color: white;">Back to Dashboard</a>
         </header>
 
-        <h2 class="mb-4">Manage Institutions</h2>
-
-        <div class="card mb-4">
-            <div class="card-header " style="backgroung: brown;">
-                Add Institution
-            </div>
-            <div class="card-body">
-            <form action="add_institution.php" method="post" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label for="name" class="form-label">Institution Name</label>
-        <input type="text" name="name" id="name" class="form-control" placeholder="Institution Name" required>
-    </div>
-    <div class="mb-3">
-        <label for="contact" class="form-label">Contact Info</label>
-        <input type="text" name="contact" id="contact" class="form-control" placeholder="Contact Info" required>
-    </div>
-    <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <textarea name="description" id="description" class="form-control" placeholder="Description" required></textarea>
-    </div>
-    <div class="mb-3">
-        <label for="logo" class="form-label">Logo</label>
-        <input type="file" name="logo" id="logo" class="form-control" accept="image/*">
-    </div>
-    <div class="mb-3">
-        <label for="motto" class="form-label">Motto</label>
-        <input type="text" name="motto" id="motto" class="form-control" placeholder="Motto">
-    </div>
-    <div class="mb-3">
-        <label for="established_year" class="form-label">Established Year</label>
-        <input type="number" name="established_year" id="established_year" class="form-control" placeholder="Established Year">
-    </div>
-    <div class="mb-3">
-        <label for="type" class="form-label">Type</label>
-        <select name="type" id="type" class="form-control" required>
-            <option value="Public">Public</option>
-            <option value="Private">Private</option>
-            <option value="Religious">Religious</option>
-            <option value="International">International</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label for="accreditation_status" class="form-label">Accreditation Status</label>
-        <input type="text" name="accreditation_status" id="accreditation_status" class="form-control" placeholder="Accreditation Status" required>
-    </div>
-    <div class="mb-3">
-        <label for="website" class="form-label">Website</label>
-        <input type="url" name="website" id="website" class="form-control" placeholder="Website URL" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Add Institution</button>
-</form>
-            </div>
-        </div>
-
         <h3>Institution List</h3>
                 <div class="table-responsive">
             <table class="table table-bordered table-striped">

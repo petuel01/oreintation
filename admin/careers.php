@@ -4,7 +4,7 @@ $current_page = "careers.php";
 include("sidebar.php");
 include("../config/db.php");
 
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['admin', 'school_rep'])) {
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['user_role'], ['admin'])) {
     header("Location: ../login.php");
     exit();
 }
