@@ -96,7 +96,7 @@ include("config/db.php");
 <body>
 
 <!-- Include Navbar -->
-<?php include("sidebar.php"); ?>
+<?php include("student/sidebar.php"); ?>
 <br>
 <br>
 

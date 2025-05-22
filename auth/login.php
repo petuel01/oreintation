@@ -1,6 +1,6 @@
 <?php session_start(); 
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $client = new Google_Client();
 $client->setClientId('1041692668860-ltlh4m15m6nsdtaqmbodli294r6o7bme.apps.googleusercontent.com');
@@ -94,7 +94,7 @@ unset($_SESSION['errors']); // Clear errors after displaying
 </head>
 <body>
     <div class="image-container">
-        <img src="assets/a.jpeg" alt="Login Illustration">
+        <img src="../assets/a.jpeg" alt="Login Illustration">
     </div>
     <div class="login-container">
         <div class="login-box">

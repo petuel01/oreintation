@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
         echo "Redirecting to admin dashboard...";
         header('Location: admin/dashboard.php');
         exit();
-    } elseif ($role === 'school_rep') {
+    } elseif ($role === 'schol_rep/chool_rep') {
         if ($status === 'pending') {
             echo "Your account is pending approval by an admin.";
             echo '<br><a href="login.php" style="background-color: #5D4037; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 16px;">Proceed to Login</a>';

@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
             } elseif ($role === 'student') {
                 // Redirect student to their dashboard
-                header("Location: index.php");
+                header("Location: ../index.php");
                 exit();
             }
         } else {

@@ -1,7 +1,7 @@
 <!-- filepath: c:\xampp\htdocs\oreintation\process_login.php -->
 <?php
 session_start();
-include("config/db.php");
+include("../config/db.php");
 
 // ✅ RECAPTCHA CONFIG
 $recaptchaSecret = '6Le9iT4rAAAAAM161w-7H71_xmGDQOyQTBzOwc2Q'; // Replace with your actual secret key
@@ -55,13 +55,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 } else {
                     // Redirect based on role
                     if ($role === 'admin') {
-                        header('Location: admin/dashboard.php');
+                        header('Location: ../admin/dashboard.php');
                         exit();
                     } elseif ($role === 'school_rep') {
-                        header('Location: school_rep/dashboard.php');
+                        header('Location: ../school_rep/dashboard.php');
                         exit();
                     } else {
-                        header('Location: index.php');
+                        header('Location: ../index.php');
                         exit();
                     }
                 }

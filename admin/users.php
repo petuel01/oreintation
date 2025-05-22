@@ -26,9 +26,10 @@ $result = $conn->query("SELECT * FROM users");
 <body class="bg-light">
 <div class="d-flex">
     <!-- Sidebar -->
-    <nav class="sidebar bg-dark text-white p-3">
-        <?php include("sidebar.php"); ?>
-    </nav>
+    <nav class="sidebar">
+           <?php include("sidebar.php"); ?>
+        </nav>
+
     <div class="main-content flex-grow-1 p-4">
         <header class="d-flex justify-content-between align-items-center mb-4">
         </header>

@@ -29,7 +29,7 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.css">
     <style>
         .stat-card {
-            background-color: #4d2600;
+            background-color:rgb(82, 48, 26);
             color: white;
             padding: 20px;
             border-radius: 8px;
@@ -55,18 +55,18 @@ $result = $conn->query($sql);
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-2 d-none d-md-block bg-light sidebar">
-                <?php include("sidebar.php"); ?>
-            </nav>
+<div class="d-flex">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+           <?php include("sidebar.php"); ?>
+        </nav>
+
 
             <!-- Main Content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <header class="d-flex justify-content-between align-items-center py-3">
-                    <h2>Admin Dashboard</h2>
-                    <button class="btn btn-dark"><i class="fas fa-plus"></i> Add New</button>
+                    <h1 class="h2">KamerGuide</h1>
+                   
                 </header>
 
                 <!-- Dashboard Stats -->

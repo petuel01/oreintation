@@ -1,7 +1,4 @@
-<!-- filepath: c:\xampp\htdocs\oreintation\sidebar.php -->
-<?php
-session_start();
-?>
+
 
 <style>
     /* Navbar styles */
@@ -126,19 +123,19 @@ session_start();
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.php">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="../index.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="explore.php">Explore Universities</a></li>
-                <li class="nav-item"><a class="nav-link" href="how_it_works.php">How It Works</a></li>
+                <li class="nav-item"><a class="nav-link" href="careers.php">Carrers</a></li>
                 <li class="nav-item"><a class="nav-link" href="about.php">About Us</a></li>
                 <li class="nav-item"><a class="nav-link" href="contact.php">Contact Us</a></li>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <!-- Links for Logged-In Users -->
                     <li class="nav-item"><a class="nav-link" href="apply.php">Apply for Admission</a></li>
                     <li class="nav-item"><a class="nav-link" href="scholarships.php">Scholarships</a></li>
-                    <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link" href="../auth/logout.php">Logout</a></li>
                 <?php else: ?>
                     <!-- Login/Register Link for Unauthorized Users -->
-                    <li class="nav-item"><a class="nav-link btn btn-light text-dark" href="login.php">Login/Register</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-light text-dark" href="../auth/login.php">Login/Register</a></li>
                 <?php endif; ?>
             </ul>
         </div>
@@ -149,15 +146,15 @@ session_start();
 <div class="mobile-menu" id="mobileMenu">
     <span class="close-btn" id="closeMenu">&times;</span>
     <ul>
-        <li><a href="index.php">Home</a></li>
-        <li><a href="explore.php">Explore Universities</a></li>
-        <li><a href="how_it_works.php">How It Works</a></li>
-        <li><a href="about.php">About Us</a></li>
-        <li><a href="contact.php">Contact Us</a></li>
+        <li><a href="../index.php">Home</a></li>
+        <li><a href="student/explore.php">Explore Universities</a></li>
+        <li><a href="student/how_it_works.php">How It Works</a></li>
+        <li><a href="student/about.php">About Us</a></li>
+        <li><a href="student/contact.php">Contact Us</a></li>
         <?php if (isset($_SESSION['user_id'])): ?>
             <li><a href="apply.php">Apply for Admission</a></li>
             <li><a href="scholarships.php">Scholarships</a></li>
-            <li><a href="logout.php">Logout</a></li>
+            <li><a href="auth/logout.php">Logout</a></li>
         <?php else: ?>
             <li><a href="login.php">Login/Register</a></li>
         <?php endif; ?>
