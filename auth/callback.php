@@ -3,7 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -12,8 +12,7 @@ session_start();
 $client = new Google_Client();
 $client->setClientId('1041692668860-ltlh4m15m6nsdtaqmbodli294r6o7bme.apps.googleusercontent.com');
 $client->setClientSecret('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');
-$client->setRedirectUri('http://localhost/oreintation/callback.php');
-
+$client->setRedirectUri('http://localhost/oreintation/auth/callback.php');
 $client->addScope("email");
 $client->addScope("profile");
 
@@ -59,20 +58,18 @@ if (isset($_GET['code'])) {
             // Redirect based on role and status
             if ($role === 'school_rep' && $status === 'pending') {
                 // Send email to the admin
-
                 $mail = new PHPMailer(true);
                 try {
                     $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com'; // Gmail SMTP server
+                    $mail->Host = 'smtp.gmail.com';
                     $mail->SMTPAuth = true;
-                    $mail->Username = 'baifempetuel0.2@gmail.com'; // Your Gmail address
-                    $mail->Password = 'mceq hojx joal awrx'; // Your Gmail app password
+                    $mail->Username = 'baifempetuel0.2@gmail.com';
+                    $mail->Password = 'mceq hojx joal awrx';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                     $mail->Port = 587;
 
-                    // Email to the admin
                     $mail->setFrom('admin@example.com', 'Admin');
-                    $mail->addAddress('admin@example.com'); // Replace with admin email
+                    $mail->addAddress('admin@example.com');
                     $mail->isHTML(true);
                     $mail->Subject = 'New School Representative Registration';
                     $mail->Body = "A new school representative has registered.<br><br>Name: {$_SESSION['name']}<br>Email: {$_SESSION['email']}<br><br><a href='http://localhost/oreintation/admin/approve_school_reps.php'>Click here to approve the account</a>";
@@ -83,7 +80,7 @@ if (isset($_GET['code'])) {
                 }
 
                 // Redirect to the pending approval page
-                header('Location: pending_approval.php');
+                header('Location: /oreintation/school_rep/pending_approval.php');
                 exit();
             }
 
@@ -93,13 +90,13 @@ if (isset($_GET['code'])) {
             }
 
             if ($role === 'admin') {
-                header('Location: admin/dashboard.php');
+                header('Location: /oreintation/admin/dashboard.php');
                 exit();
             } elseif ($role === 'school_rep') {
-                header('Location: school_rep/dashboard.php');
+                header('Location: /oreintation/school_rep/dashboard.php');
                 exit();
             } else {
-                header('Location: index.php');
+                header('Location: /oreintation/index.php');
                 exit();
             }
         } else {
@@ -162,37 +159,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
         $stmt = $conn->prepare("UPDATE users SET role = ?, status = ?, university_id = ? WHERE email = ?");
         $stmt->bind_param("ssis", $role, $status, $university_id, $email);
         $stmt->execute();
+        // Get the user id for session
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->bind_result($user_id);
+        $stmt->fetch();
+        $stmt->close();
+        $_SESSION['user_id'] = $user_id;
     } else {
         // New user, insert into the database
         $stmt->close();
         $stmt = $conn->prepare("INSERT INTO users (email, name, role, status, university_id) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssi", $email, $name, $role, $status, $university_id);
         $stmt->execute();
+        $_SESSION['user_id'] = $conn->insert_id;
     }
 
-    // Set session variables
-    $_SESSION['user_id'] = $conn->insert_id;
     $_SESSION['user_role'] = $role;
     $_SESSION['status'] = $status;
     $_SESSION['university_id'] = $university_id;
 
     if ($role === 'admin') {
-        echo "Redirecting to admin dashboard...";
-        header('Location: admin/dashboard.php');
+        header('Location: /oreintation/admin/dashboard.php');
         exit();
-    } elseif ($role === 'schol_rep/chool_rep') {
+    } elseif ($role === 'school_rep') {
         if ($status === 'pending') {
-            echo "Your account is pending approval by an admin.";
-            echo '<br><a href="login.php" style="background-color: #5D4037; color: #FFFFFF; border: none; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 16px;">Proceed to Login</a>';
+            header('Location: /oreintation/school_rep/pending_approval.php');
             exit();
         } else {
-            echo "Redirecting to school_rep dashboard...";
-            header('Location: school_rep/dashboard.php');
+            header('Location: /oreintation/school_rep/dashboard.php');
             exit();
         }
     } else {
-        echo "Redirecting to index...";
-        header('Location: index.php');
+        header('Location: /oreintation/index.php');
         exit();
     }
 }

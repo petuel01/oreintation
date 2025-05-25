@@ -120,7 +120,14 @@ $scholarships_count = $conn->query("SELECT COUNT(*) AS count FROM scholarships W
                     <img src="../<?= htmlspecialchars($university_logo); ?>" alt="University Logo" title="Click to update logo">
                 </a>
                 <h2><?= htmlspecialchars($university_name); ?></h2>
-                <a href="edit_university.php" class="btn btn-primary edit-button">Edit University Information</a>
+                <a href="edit_university.php" class="btn edit-button" style="background:#5D4037; color:#fff; border:none;">
+                    Edit University Information
+                </a>
+                <div class="d-flex justify-content-center">
+                    <a href="edit_location.php" class="btn btn-warning edit-button mt-2" style="background:#5D4037; color:#fff; border:none;">
+                        <i class="fas fa-map-marker-alt me-1"></i>Update Location
+                    </a>
+                </div>
             </div>
 
             <!-- Statistics Section -->

@@ -47,7 +47,7 @@ if (isset($_GET['approve_id']) && is_numeric($_GET['approve_id'])) {
                 $mail->addAddress($email, $name);
                 $mail->isHTML(true);
                 $mail->Subject = 'Account Approved';
-                $mail->Body = "Dear $name,<br>Your account has been approved. You can now log in to your dashboard.<br><br><a href='http://localhost/oreintation/login.php'>Click here to log in</a>";
+                $mail->Body = "Dear $name,<br>Your account has been approved. You can now log in to your dashboard.<br><br><a href='http://localhost/oreintation/school_rep/dashboard.php'>Click here to log in</a>";
 
                 $mail->send();
                 $_SESSION['success'] = "User approved successfully, and an email has been sent to the user.";

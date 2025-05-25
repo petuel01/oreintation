@@ -1,12 +1,12 @@
 <!-- filepath: c:\xampp\htdocs\oreintation\register.php -->
 <?php
 session_start();
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $client = new Google_Client();
 $client->setClientId('1041692668860-ltlh4m15m6nsdtaqmbodli294r6o7bme.apps.googleusercontent.com');
 $client->setClientSecret('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');
-$client->setRedirectUri('http://localhost/oreintation/callback.php');
+$client->setRedirectUri('http://localhost/oreintation/auth/callback.php');
 $client->addScope("email");
 $client->addScope("profile");
 
@@ -85,7 +85,7 @@ unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displa
 </head>
 <body>
     <div class="left-side">
-        <img src="assets/Flux_Dev_Generate_an_elegant_image_of_a_confident_black_studen_0.jpeg" alt="">
+        <img src="../assets/Flux_Dev_Generate_an_elegant_image_of_a_confident_black_studen_0.jpeg" alt="">
     </div>
     <div class="right-side">
         <div class="form-container">

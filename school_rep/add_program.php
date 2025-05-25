@@ -48,13 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+   <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Program</title>
+    <title>School Rep Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.css">
 </head>
 <body>
-    <div class="container mt-5">
+     <div class="d-flex flex-column flex-md-row">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <?php include("sidebar.php"); ?>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1 p-4">
         <h2>Add New Program</h2>
         <form method="POST" action="add_program.php">
             <div class="mb-3">
@@ -88,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <button type="submit" class="btn btn-primary">Add Program</button>
         </form>
+    </div>
     </div>
 </body>
 </html>

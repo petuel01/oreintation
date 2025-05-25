@@ -28,11 +28,19 @@ if ($result) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Applications</title>
+    <title>School Rep Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.css">
 </head>
 <body>
-    <div class="container mt-5">
+       <div class="d-flex flex-column flex-md-row">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <?php include("sidebar.php"); ?>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1 p-4">
         <h2>Applications</h2>
         <table class="table table-bordered">
             <thead>
@@ -62,6 +70,7 @@ if ($result) {
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
     </div>
 </body>
 </html>

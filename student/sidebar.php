@@ -1,6 +1,7 @@
 
 
 <style>
+    
     /* Navbar styles */
     .navbar {
         background-color: #5D4037; /* Dark brown color */
@@ -125,7 +126,7 @@
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item"><a class="nav-link" href="../index.php">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="explore.php">Explore Universities</a></li>
-                <li class="nav-item"><a class="nav-link" href="careers.php">Carrers</a></li>
+                <li class="nav-item"><a class="nav-link" href="carreer.php">Carrers</a></li>
                 <li class="nav-item"><a class="nav-link" href="about.php">About Us</a></li>
                 <li class="nav-item"><a class="nav-link" href="contact.php">Contact Us</a></li>
                 <?php if (isset($_SESSION['user_id'])): ?>
@@ -147,16 +148,16 @@
     <span class="close-btn" id="closeMenu">&times;</span>
     <ul>
         <li><a href="../index.php">Home</a></li>
-        <li><a href="student/explore.php">Explore Universities</a></li>
-        <li><a href="student/how_it_works.php">How It Works</a></li>
-        <li><a href="student/about.php">About Us</a></li>
-        <li><a href="student/contact.php">Contact Us</a></li>
+        <li><a href="explore.php">Explore Universities</a></li>
+        <li class="nav-item"><a class="nav-link" href="carreer.php">Carrers</a></li>
+        <li><a href="about.php">About Us</a></li>
+        <li><a href="contact.php">Contact Us</a></li>
         <?php if (isset($_SESSION['user_id'])): ?>
             <li><a href="apply.php">Apply for Admission</a></li>
             <li><a href="scholarships.php">Scholarships</a></li>
-            <li><a href="auth/logout.php">Logout</a></li>
+            <li><a href="../auth/logout.php">Logout</a></li>
         <?php else: ?>
-            <li><a href="login.php">Login/Register</a></li>
+            <li><a href="../auth/login.php">Login/Register</a></li>
         <?php endif; ?>
     </ul>
 </div>
@@ -184,3 +185,5 @@
         }
     });
 </script>
+<br>
+<br>
