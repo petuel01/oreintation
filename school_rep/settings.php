@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-<div class="d-flex">
+    <div class="d-flex">
     <!-- Sidebar -->
     <nav class="sidebar">
            <?php include("sidebar.php"); ?>
@@ -145,6 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Main Content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="settings-container">
         <div class="settings-header">
             <i class="fas fa-user-cog"></i>
             Account Settings
