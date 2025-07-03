@@ -17,11 +17,11 @@
                 <h5 class="mb-3">Quick Links</h5>
                 <ul class="list-unstyled">
                     <li><a href="index.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-home me-2"></i>Home</a></li>
-                    <li><a href="explore.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-university me-2"></i>Explore Universities</a></li>
-                    <li><a href="careers.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-briefcase me-2"></i>Career Guides</a></li>
-                    <li><a href="scholarships.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-award me-2"></i>Scholarships</a></li>
-                    <li><a href="about.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-info-circle me-2"></i>About Us</a></li>
-                    <li><a href="contact.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-envelope me-2"></i>Contact</a></li>
+                    <li><a href="student/explore.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-university me-2"></i>Explore Universities</a></li>
+                    <li><a href="student/carreer.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-briefcase me-2"></i>Career Guides</a></li>
+                    <li><a href="student/scholarships.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-award me-2"></i>Scholarships</a></li>
+                    <li><a href="student/about.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-info-circle me-2"></i>About Us</a></li>
+                    <li><a href="student/contact.php" class="text-white text-decoration-none d-flex align-items-center mb-2"><i class="fas fa-envelope me-2"></i>Contact</a></li>
                 </ul>
             </div>
             <!-- Contact Info -->
@@ -59,7 +59,7 @@
                 <small>
                     &copy; <?= date('Y') ?> KamerGuide. All Rights Reserved. | 
                     <a href="privacy.php" class="text-white text-decoration-underline">Privacy Policy</a> | 
-                    <a href="terms.php" class="text-white text-decoration-underline">Terms of Service</a>
+                    <a href="terms.php" class="text-white text-decoration-underline">Terms & Conditions</a>
                 </small>
             </div>
             <div class="col-md-6 text-end">

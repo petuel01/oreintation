@@ -5,33 +5,15 @@ require __DIR__ . '/vendor/autoload.php'; // Include PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require_once __DIR__ . '/../utils/email_helper.php';
 function sendPasswordResetEmail($email, $resetLink) {
-    $mail = new PHPMailer(true);
-
-    try {
-        // Server settings
-        $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // Gmail SMTP server
-        $mail->SMTPAuth = true;
-        $mail->Username = 'baifempetuel0.2@gmail.com'; // Your Gmail address
-        $mail->Password = 'mceq hojx joal awrx'; // Your Gmail app password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        // Recipients
-        $mail->setFrom('your-email@gmail.com', 'Your App Name');
-        $mail->addAddress($email);
-        $mail->addReplyTo('your-email@gmail.com', 'Your App Name'); // Add Reply-To header
-
-        // Content
-        $mail->isHTML(true);
-        $mail->Subject = 'Password Reset Request';
-        $mail->Body = "Click the link below to reset your password:<br><a href='$resetLink'>$resetLink</a>";
-
-        $mail->send();
+    $subject = 'Password Reset Request';
+    $body = "Click the link below to reset your password:<br><a href='$resetLink'>$resetLink</a>";
+    $result = sendEmail($email, $subject, $body);
+    if ($result === true) {
         return true;
-    } catch (Exception $e) {
-        return "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+    } else {
+        return "Message could not be sent. Mailer Error: $result";
     }
 }
 

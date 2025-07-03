@@ -22,7 +22,7 @@ unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displa
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Register - KamerGuide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
@@ -66,12 +66,33 @@ unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displa
         .btn-dark-brown:hover {
             background-color: #4A3228;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 991px) {
             .left-side {
                 display: none;
             }
             .right-side {
                 flex: 1;
+                padding: 10px;
+                min-width: 0;
+            }
+            .form-container {
+                max-width: 100%;
+                padding: 12px;
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+        @media (max-width: 575px) {
+            .form-container {
+                padding: 6px;
+                font-size: 0.97rem;
+            }
+            .btn-dark-brown, .btn-dark-brown:hover {
+                font-size: 1rem;
+                padding: 8px 0;
+            }
+            .form-label, .form-control, .form-select {
+                font-size: 0.97rem;
             }
         }
         .strength-bar {
@@ -85,11 +106,11 @@ unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displa
 </head>
 <body>
     <div class="left-side">
-        <img src="../assets/Flux_Dev_Generate_an_elegant_image_of_a_confident_black_studen_0.jpeg" alt="">
+        <img src="../assets/Flux_Dev_Generate_an_elegant_image_of_a_confident_black_studen_0.jpeg" alt="KamerGuide Registration">
     </div>
     <div class="right-side">
         <div class="form-container">
-            <h2 class="text-center">Register User</h2>
+            <h2 class="text-center">Register</h2>
 
             <!-- Display Errors -->
             <?php if (!empty($errors)): ?>
@@ -109,7 +130,9 @@ unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displa
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="process_register.php">
+            <form method="POST" action="process_register.php" enctype="multipart/form-data">
+                <!-- Profile picture upload removed as per requirements -->
+                <!-- Terms & Conditions checkbox moved to the bottom -->
                 <div class="mb-2">
                     <label for="name" class="form-label">Name</label>
                     <input type="text" class="form-control form-control-sm" id="name" name="name" required>
@@ -157,6 +180,10 @@ unset($_SESSION['errors'], $_SESSION['success']); // Clear messages after displa
                 
                 <div class="mb-2">
                     <div class="g-recaptcha" data-sitekey="6Le9iT4rAAAAAG9LWxMeJD5qIxltjDmyWwNQxRJr"></div>
+                </div>
+                <div class="mb-2 form-check mt-3">
+                    <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                    <label class="form-check-label" for="terms">I agree to the <a href="../terms.php" target="_blank" style="color:#FFD54F;">Terms & Conditions</a></label>
                 </div>
                 <button type="submit" class="btn btn-dark-brown w-100">Register</button>
                 <div class="text-center mt-2">

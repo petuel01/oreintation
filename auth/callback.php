@@ -128,17 +128,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     $university_id = null;
     if ($role === 'school_rep') {
         $university_name = trim($_POST['university']);
-
         // Check if the university already exists
         $stmt = $conn->prepare("SELECT id FROM universities WHERE name = ?");
         $stmt->bind_param("s", $university_name);
         $stmt->execute();
-        $stmt->bind_result($university_id);
-        $stmt->fetch();
-        $stmt->close();
-
-        // If the university does not exist, insert it
-        if (!$university_id) {
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            // University exists, do not allow duplicate
+            $stmt->close();
+            echo '<div style="color:red;text-align:center;margin:20px;">A university with this name already exists. Please contact the admin or select another university.</div>';
+            showRoleSelectionForm();
+            exit();
+        } else {
+            $stmt->close();
+            // If the university does not exist, insert it
             $stmt = $conn->prepare("INSERT INTO universities (name) VALUES (?)");
             $stmt->bind_param("s", $university_name);
             $stmt->execute();
@@ -148,16 +151,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['role'])) {
     }
 
     // Check if the user already exists
-    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt = $conn->prepare("SELECT id, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $stmt->store_result();
+    $stmt->bind_result($user_id, $existing_role);
+    $stmt->fetch();
 
     if ($stmt->num_rows > 0) {
-        // User exists, update their role, status, and university_id
+        // Prevent role switch between student and school_rep
+        if ($existing_role && $existing_role !== $role) {
+            $stmt->close();
+            echo '<div style="color:red;text-align:center;margin:20px;">You already have an account as ' . htmlspecialchars($existing_role) . ' with this email. Please use the correct login method.</div>';
+            exit();
+        }
+        // User exists, update their status and university_id if needed
         $stmt->close();
-        $stmt = $conn->prepare("UPDATE users SET role = ?, status = ?, university_id = ? WHERE email = ?");
-        $stmt->bind_param("ssis", $role, $status, $university_id, $email);
+        $stmt = $conn->prepare("UPDATE users SET status = ?, university_id = ? WHERE email = ?");
+        $stmt->bind_param("sis", $status, $university_id, $email);
         $stmt->execute();
         // Get the user id for session
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");

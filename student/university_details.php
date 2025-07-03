@@ -1,41 +1,33 @@
 <?php
 session_start();
 include("../config/db.php");
-
 // Get the university ID from the query string
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Invalid university ID.");
 }
-
 $university_id = intval($_GET['id']);
-
 // Fetch university details
 $query = "SELECT * FROM universities WHERE id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $university_id);
 $stmt->execute();
 $result = $stmt->get_result();
-
 if ($result->num_rows === 0) {
     die("University not found.");
 }
-
 $university = $result->fetch_assoc();
-
 // Fetch featured programs
 $programs_query = "SELECT * FROM programs WHERE university_id = ?";
 $stmt = $conn->prepare($programs_query);
 $stmt->bind_param("i", $university_id);
 $stmt->execute();
 $programs_result = $stmt->get_result();
-
 // Fetch scholarships
 $scholarships_query = "SELECT * FROM scholarships WHERE university_id = ?";
 $stmt = $conn->prepare($scholarships_query);
 $stmt->bind_param("i", $university_id);
 $stmt->execute();
 $scholarships_result = $stmt->get_result();
-
 // Fetch career paths for each program (assuming a careers table with related_programs as comma-separated program IDs)
 $careers_by_program = [];
 $careers_query = "SELECT * FROM careers";
@@ -50,6 +42,16 @@ while ($career = $careers_result->fetch_assoc()) {
         }
     }
 }
+// Fetch average rating and count
+$rating_row = null;
+$rating_stmt = $conn->prepare("SELECT AVG(rating_overall) as avg_rating, COUNT(*) as count FROM student_reviews WHERE university_id = ?");
+$rating_stmt->bind_param("i", $university_id);
+$rating_stmt->execute();
+$rating_result = $rating_stmt->get_result();
+if ($rating_result && $rating_result->num_rows > 0) {
+    $rating_row = $rating_result->fetch_assoc();
+}
+$rating_stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -137,6 +139,54 @@ while ($career = $careers_result->fetch_assoc()) {
     <div class="container">
         <h1><?= htmlspecialchars($university['name']) ?></h1>
         <p><?= htmlspecialchars($university['motto']) ?></p>
+        <div class="mt-3">
+            <span id="star-rating" style="font-size:1.5rem; color: #FFD700;">
+                <?php
+                $avg = $rating_row && $rating_row['avg_rating'] !== null ? round($rating_row['avg_rating'], 1) : 0;
+                for ($i = 1; $i <= 5; $i++) {
+                    if ($i <= floor($avg)) {
+                        echo '<i class="fas fa-star"></i>';
+                    } elseif ($i - $avg < 1 && $avg - floor($avg) >= 0.5) {
+                        echo '<i class="fas fa-star-half-alt"></i>';
+                    } else {
+                        echo '<i class="far fa-star"></i>';
+                    }
+                }
+                ?>
+                <span class="ms-2 text-white" style="font-size:1rem;">
+                    <?= $avg ?>/5 (<?= $rating_row ? intval($rating_row['count']) : 0 ?> reviews)
+                </span>
+            </span>
+        </div>
+    </div>
+</section>
+<!-- Review Section -->
+<section class="details-section" id="review-section">
+    <div class="container">
+        <h3 class="section-title"><i class="fas fa-star icon-circle"></i>Student Reviews</h3>
+        <?php if (isset($_SESSION['user_id']) && isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'student'): ?>
+        <form id="review-form" class="mb-4" method="post" action="submit_review.php">
+            <input type="hidden" name="university_id" value="<?= $university_id ?>">
+            <div class="mb-2">
+                <label for="rating" class="form-label">Your Rating:</label>
+                <span id="star-input">
+                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                        <i class="far fa-star" data-value="<?= $i ?>" style="font-size:1.5rem; cursor:pointer;"></i>
+                    <?php endfor; ?>
+                </span>
+                <input type="hidden" name="rating" id="rating-value" value="0">
+            </div>
+            <div class="mb-2">
+                <label for="comment" class="form-label">Comment (optional):</label>
+                <textarea class="form-control" name="comment" id="comment" rows="2" maxlength="500"></textarea>
+            </div>
+            <button type="submit" class="btn btn-dark-brown">Submit Review</button>
+            <div id="review-message" class="mt-2"></div>
+        </form>
+        <?php else: ?>
+            <div class="alert alert-info">Login as a student to leave a review.</div>
+        <?php endif; ?>
+        <div id="reviews-list"></div>
     </div>
 </section>
 
@@ -336,7 +386,89 @@ if (!empty($university['location_id'])) {
 <!-- ...rest of your file... -->
 
 <?php include("../footer.php"); ?>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Star input for review form
+const stars = document.querySelectorAll('#star-input i');
+const ratingInput = document.getElementById('rating-value');
+let selectedRating = 0;
+stars.forEach(star => {
+    star.addEventListener('mouseenter', function() {
+        const val = parseInt(this.getAttribute('data-value'));
+        highlightStars(val);
+    });
+    star.addEventListener('mouseleave', function() {
+        highlightStars(selectedRating);
+    });
+    star.addEventListener('click', function() {
+        selectedRating = parseInt(this.getAttribute('data-value'));
+        ratingInput.value = selectedRating;
+        highlightStars(selectedRating);
+    });
+});
+function highlightStars(val) {
+    stars.forEach((star, idx) => {
+        if (idx < val) {
+            star.classList.remove('far');
+            star.classList.add('fas');
+        } else {
+            star.classList.remove('fas');
+            star.classList.add('far');
+        }
+    });
+}
+// Review form AJAX submit
+const reviewForm = document.getElementById('review-form');
+if (reviewForm) {
+    reviewForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(reviewForm);
+        fetch('submit_review.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const msg = document.getElementById('review-message');
+            if (data.success) {
+                msg.innerHTML = '<span class="text-success">Review submitted!</span>';
+                reviewForm.reset();
+                selectedRating = 0;
+                highlightStars(0);
+                loadReviews();
+            } else {
+                msg.innerHTML = '<span class="text-danger">' + (data.message || 'Failed to submit review.') + '</span>';
+            }
+        });
+    });
+}
+// Load reviews list
+function loadReviews() {
+    fetch('get_reviews.php?university_id=<?= $university_id ?>')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('reviews-list').innerHTML = html;
+        });
+    // Update average rating
+    fetch('get_university_rating.php?university_id=<?= $university_id ?>')
+        .then(res => res.json())
+        .then(data => {
+            let avg = data.avg ? parseFloat(data.avg) : 0;
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= Math.floor(avg)) {
+                    html += '<i class="fas fa-star"></i>';
+                } else if (i - avg < 1 && avg - Math.floor(avg) >= 0.5) {
+                    html += '<i class="fas fa-star-half-alt"></i>';
+                } else {
+                    html += '<i class="far fa-star"></i>';
+                }
+            }
+            html += `<span class=\"ms-2 text-white\" style=\"font-size:1rem;\">${avg}/5 (${data.count} reviews)</span>`;
+            document.getElementById('star-rating').innerHTML = html;
+        });
+}
+loadReviews();
+</script>
 </body>
 </html>

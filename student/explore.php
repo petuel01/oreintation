@@ -48,6 +48,9 @@ include '../config/db.php';
                             <h5 class="card-title"><?= htmlspecialchars($row['name']); ?></h5>
                             <p class="card-text"><?= htmlspecialchars($row['motto']); ?></p>
                             <p><strong>Type:</strong> <?= htmlspecialchars($row['type']); ?></p>
+                            <div class="mb-2" id="rating-<?= $row['id'] ?>">
+                                <span class="text-warning">Loading rating...</span>
+                            </div>
                             <a href="university_details.php?id=<?= $row['id']; ?>" class="btn btn-primary">View Details</a>
                             <a href="<?= htmlspecialchars($row['website']); ?>" target="_blank" class="btn btn-outline-secondary">Visit Website</a>
                         </div>
@@ -62,5 +65,33 @@ include '../config/db.php';
         </div>
     </div>
     <?php include '../footer.php'; ?>
+    <script>
+    // Load ratings for all universities
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php
+        $result = $conn->query("SELECT id FROM universities");
+        if ($result && $result->num_rows > 0):
+            while ($row = $result->fetch_assoc()):
+        ?>
+        fetch('get_university_rating.php?university_id=<?= $row['id'] ?>')
+            .then(res => res.json())
+            .then(data => {
+                let avg = data.avg ? parseFloat(data.avg) : 0;
+                let html = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= Math.floor(avg)) {
+                        html += '<i class="fas fa-star"></i>';
+                    } else if (i - avg < 1 && avg - Math.floor(avg) >= 0.5) {
+                        html += '<i class="fas fa-star-half-alt"></i>';
+                    } else {
+                        html += '<i class="far fa-star"></i>';
+                    }
+                }
+                html += `<span class=\"ms-2 text-dark\" style=\"font-size:1rem;\">${avg}/5 (${data.count} reviews)</span>`;
+                document.getElementById('rating-<?= $row['id'] ?>').innerHTML = html;
+            });
+        <?php endwhile; endif; ?>
+    });
+    </script>
 </body>
 </html>

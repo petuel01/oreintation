@@ -98,7 +98,7 @@ unset($_SESSION['errors']); // Clear errors after displaying
     </div>
     <div class="login-container">
         <div class="login-box">
-            <h2 class="text-center" style="color: white;">Admin Login</h2>
+            <h2 class="text-center" style="color: white;">Welcome!</h2>
 
             <!-- Display Errors -->
             <?php if (!empty($errors)): ?>

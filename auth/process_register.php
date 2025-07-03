@@ -32,6 +32,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $re_password = trim($_POST['re_password']);
     $role = trim($_POST['role']);
     $university_name = isset($_POST['university']) ? trim($_POST['university']) : null;
+    // $profile_pic = null; // Profile picture upload removed
+    // Terms & Conditions
+    if (!isset($_POST['terms'])) {
+        $errors[] = 'You must agree to the Terms & Conditions.';
+    }
+    // Email uniqueness check
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $stmt->store_result();
+    if ($stmt->num_rows > 0) {
+        $errors[] = 'An account with this email already exists.';
+    }
+    $stmt->close();
+    // Profile picture upload removed as per requirements
 
     if (empty($name)) {
         $errors[] = 'Name is required.';
@@ -69,18 +84,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("SELECT id FROM universities WHERE name = ?");
             $stmt->bind_param("s", $university_name);
             $stmt->execute();
-            $stmt->bind_result($university_id);
-            $stmt->fetch();
-            $stmt->close();
-
-            // If the university does not exist, insert it
-            if (!$university_id) {
+            $stmt->store_result();
+            if ($stmt->num_rows > 0) {
+                $errors[] = 'A university with this name already exists. Please contact the admin or select another university.';
+            } else {
+                // If the university does not exist, insert it
+                $stmt->close();
                 $stmt = $conn->prepare("INSERT INTO universities (name) VALUES (?)");
                 $stmt->bind_param("s", $university_name);
                 $stmt->execute();
                 $university_id = $conn->insert_id;
-                $stmt->close();
             }
+            $stmt->close();
         }
     }
 
@@ -102,32 +117,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['status'] = $status;
 
             if ($role === 'school_rep' && $status === 'pending') {
-                // Send email to the school representative
-                $mail = new PHPMailer(true);
-                try {
-                    $mail->isSMTP();
-                    $mail->Host = 'smtp.gmail.com'; // Gmail SMTP server
-                    $mail->SMTPAuth = true;
-                    $mail->Username = 'baifempetuel0.2@gmail.com'; // Your Gmail address
-                    $mail->Password = 'mceq hojx joal awrx'; // Your Gmail app password
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->Port = 587;
-
-                    // Email to the school representative
-                    // Send email to the admin
-                
-                    $mail->clearAddresses();
-                    $mail->addAddress('baifempetuel0.2@gmail.com'); // Replace with admin email
-                    $mail->Subject = 'New School Representative Registration';
-                    $mail->Body = "A new school representative has registered.<br><br>Name: $name<br>Email: $email<br>University: $university_name<br><br><a href='http://localhost/oreintation/admin/approve_school_reps.php'>Click here to approve the account</a>";
-
-                    $mail->send();
-                } catch (Exception $e) {
-                    $errors[] = "Admin notification email could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                require_once __DIR__ . '/../utils/email_helper.php';
+                // Send email to admin
+                $adminEmail = 'baifempetuel0.2@gmail.com'; // Replace with real admin email
+                $subject = 'New School Representative Registration';
+                $body = "A new school representative has registered.<br><br>Name: $name<br>Email: $email<br>University: $university_name<br><br><a href='http://localhost/oreintation/admin/approve_school_reps.php'>Click here to approve the account</a>";
+                $result = sendEmail($adminEmail, $subject, $body);
+                if ($result !== true) {
+                    $errors[] = "Admin notification email could not be sent. Mailer Error: $result";
                 }
-
-                
-
                 // Redirect to the pending approval page
                 header("Location: pending_approval.php");
                 exit();
@@ -144,7 +142,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Store errors in session and redirect back to the registration page
-    $_SESSION['errors'] = $errors;
+    if (!empty($errors)) {
+        // Only show the first error for clarity
+        $_SESSION['errors'] = [reset($errors)];
+    }
     header("Location: register.php");
     exit();
 }
